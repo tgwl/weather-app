@@ -4,7 +4,7 @@
     <div class="desk-surface"></div>
     
     <!-- 3D 书本主体 -->
-    <div class="book" :class="{ 'is-mobile': isMobile }">
+    <div class="book" :class="{ 'is-mobile': isMobile, 'wechat-env': isWeChat }">
       
       <!-- 左页：联系与导航 -->
       <div class="page left-page">
@@ -14,7 +14,6 @@
           <!-- 头像区域 -->
           <div class="avatar-frame">
             <div class="polaroid">
-              <!-- 已清理 URL 空格 -->
               <img src="../assets/avatar.png" alt="Author" class="author-img" />
               <div class="polaroid-bottom"></div>
             </div>
@@ -24,7 +23,6 @@
           
           <!-- 博客与 Email 入口 -->
           <div class="links-container">
-            <!-- 博客链接 (已清理 URL 空格) -->
             <a href="https://zezin.netlify.app/" target="_blank" class="action-link">
               <span class="link-icon">📰</span>
               <div class="link-text-group">
@@ -34,8 +32,7 @@
               <span class="link-arrow">↗</span>
             </a>
   
-            <!-- Email 链接 (请记得替换真实邮箱) -->
-            <a href="tg2521150881@gmail.com" class="action-link">
+            <a href="mailto:tg2521150881@gmail.com" class="action-link">
               <span class="link-icon">✉️</span>
               <div class="link-text-group">
                 <span class="link-title">Email</span>
@@ -48,7 +45,7 @@
         </div>
       </div>
   
-      <!-- 右页：内容页 (核心功能) -->
+      <!-- 右页：内容页 -->
       <div class="page right-page">
         <div class="page-content">
           <div class="book-bindings"></div>
@@ -64,10 +61,10 @@
             </div>
           </router-link>
   
-          <!-- 诗意金句 -->
+          <!-- 诗意金句 - 斜体 + 发虚效果 -->
           <div class="quote-section">
-            <div class="quote-mark">“</div>
-            <p class="quote-text">
+            <div class="quote-mark">"</div>
+            <p class="quote-text" :class="{ 'wechat-android': isAndroidWeChat }">
               我别无所求，<br/>
               只想被阳光晒透
             </p>
@@ -86,7 +83,7 @@
   
     </div>
     
-    <!-- 版权信息 (已加强样式确保显示) -->
+    <!-- 版权信息 -->
     <div class="global-copyright">
       &copy; {{ currentYear }} Made with 煜
     </div>
@@ -98,14 +95,40 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 const currentYear = new Date().getFullYear()
 const isMobile = ref(false)
+const isWeChat = ref(false)
+const isAndroidWeChat = ref(false)
 
+// 检测微信环境
+const checkWeChat = () => {
+  const ua = navigator.userAgent.toLowerCase()
+  isWeChat.value = /micromessenger/i.test(ua)
+  isAndroidWeChat.value = /android.*micromessenger/i.test(ua)
+}
+
+// 检测设备类型
 const checkMobile = () => {
   isMobile.value = window.innerWidth < 768
 }
 
-onMounted(() => {
+// 初始化检测
+const initEnvCheck = () => {
   checkMobile()
+  checkWeChat()
+}
+
+onMounted(() => {
+  initEnvCheck()
   window.addEventListener('resize', checkMobile)
+  
+  // 开发环境打印环境信息
+  if (import.meta.env.DEV) {
+    console.log('📱 环境信息:', {
+      isMobile: isMobile.value,
+      isWeChat: isWeChat.value,
+      isAndroidWeChat: isAndroidWeChat.value,
+      userAgent: navigator.userAgent
+    })
+  }
 })
 
 onUnmounted(() => {
@@ -114,7 +137,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* --- 变量与基础设置 --- */
+/* ============================================
+   变量与基础设置
+   ============================================ */
 :root {
   --paper-color: #fdfbf7;
   --text-color: #2c2c2c;
@@ -129,15 +154,24 @@ onUnmounted(() => {
   background-image: radial-gradient(circle at 50% 30%, #f5f3ef 0%, #e8e6e1 100%);
   display: flex;
   flex-direction: column;
-  justify-content: center; /* 垂直居中 */
-  align-items: center;     /* 水平居中 */
-  padding: 40px 20px 60px; /* 关键：增加底部 padding，给版权信息留出空间 */
-  box-sizing: border-box;  /* 确保 padding 不增加总高度导致溢出 */
-  font-family: "Songti SC", "SimSun", "Times New Roman", serif;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px 60px;
+  box-sizing: border-box;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "SimSun", "Songti SC", serif;
   position: relative;
+  
+  /* 字体渲染优化 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-/* --- 3D 书本容器 --- */
+/* ============================================
+   3D 书本容器
+   ============================================ */
 .book {
   position: relative;
   width: 800px;
@@ -146,8 +180,8 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   transition: transform 0.5s ease;
-  z-index: 1; /* 确保书本在背景之上 */
-  flex-shrink: 0; /* 防止书本被压缩 */
+  z-index: 1;
+  flex-shrink: 0;
 }
 
 /* 移动端适配 */
@@ -174,13 +208,15 @@ onUnmounted(() => {
     display: none;
   }
   .book-container {
-    padding: 20px 10px 50px; /* 移动端也保留底部空间 */
-    justify-content: flex-start; /* 移动端从顶部开始，避免上半部分被切 */
+    padding: 20px 10px 50px;
+    justify-content: flex-start;
     padding-top: 40px;
   }
 }
 
-/* --- 书页通用样式 --- */
+/* ============================================
+   书页通用样式
+   ============================================ */
 .page {
   width: 400px;
   height: 550px;
@@ -235,7 +271,9 @@ onUnmounted(() => {
 .left-page .book-bindings { right: 0; }
 .right-page .book-bindings { left: 0; background: linear-gradient(to left, rgba(0,0,0,0.15), transparent); }
 
-/* --- 左页内容 --- */
+/* ============================================
+   左页内容
+   ============================================ */
 .avatar-frame {
   margin: 20px 0 15px;
   transform: scale(0.9);
@@ -341,7 +379,9 @@ onUnmounted(() => {
   opacity: 1;
 }
 
-/* --- 右页内容 --- */
+/* ============================================
+   右页内容
+   ============================================ */
 .essay-chapter {
   text-decoration: none;
   color: inherit;
@@ -395,6 +435,9 @@ onUnmounted(() => {
   font-family: sans-serif;
 }
 
+/* ============================================
+   诗意金句 - 斜体 + 发虚效果（强化版）
+   ============================================ */
 .quote-section {
   position: relative;
   margin-top: auto;
@@ -415,14 +458,95 @@ onUnmounted(() => {
   line-height: 1;
 }
 
+/* 🎯 核心：斜体 + 发虚效果（电脑端强化版） */
 .quote-text {
-  font-size: 16px;
+  /* 基础排版 */
+  font-size: clamp(14px, 4vw, 16px);
   line-height: 1.8;
   color: #444;
   margin: 10px 0;
+  
+  /* 斜体设置 */
   font-style: italic;
+  font-weight: 300;
+  -webkit-font-style: italic;
+  
+  /* 发虚效果 1：text-shadow（多层叠加，电脑端明显） */
+  text-shadow: 
+    0 0 2px rgba(139, 90, 43, 0.3),
+    0 0 4px rgba(139, 90, 43, 0.2),
+    0 0 8px rgba(139, 90, 43, 0.15),
+    0 0 12px rgba(139, 90, 43, 0.1),
+    0 0 20px rgba(139, 90, 43, 0.05);
+  
+  /* 发虚效果 2：filter blur（电脑端启用，增强模糊感） */
+  filter: blur(0.4px);
+  -webkit-filter: blur(0.4px);
+  
+  /* 朦胧感增强 */
+  opacity: 0.88;
+  letter-spacing: 0.5px;
+  
+  /* 字体渲染优化 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  word-break: break-word;
+  -webkit-line-break: loose;
+  
   position: relative;
   z-index: 1;
+  
+  /* 确保样式优先级 */
+  display: block;
+}
+
+/* Android 微信降级：禁用 filter，只用 text-shadow */
+.quote-text.wechat-android {
+  filter: none !important;
+  -webkit-filter: none !important;
+  display: inline-block;
+  transform: skewX(-6deg);
+  -webkit-transform: skewX(-6deg);
+  font-weight: 400;
+  font-style: normal;
+  -webkit-font-style: normal;
+  text-shadow: 
+    0 0 2px rgba(139, 90, 43, 0.25),
+    0 0 6px rgba(139, 90, 43, 0.18),
+    0 0 12px rgba(139, 90, 43, 0.12);
+  opacity: 0.92;
+}
+
+/* iOS 微信增强模糊 */
+@supports (-webkit-touch-callout: none) {
+  .quote-text:not(.wechat-android) {
+    text-shadow: 
+      0 0 3px rgba(139, 90, 43, 0.25),
+      0 0 8px rgba(139, 90, 43, 0.18),
+      0 0 15px rgba(139, 90, 43, 0.12),
+      0 0 25px rgba(139, 90, 43, 0.06);
+    filter: blur(0.5px);
+    -webkit-filter: blur(0.5px);
+    opacity: 0.85;
+  }
+}
+
+/* 桌面端专属增强（确保电脑端明显发虚） */
+@media (min-width: 769px) {
+  .quote-text:not(.wechat-android) {
+    text-shadow: 
+      0 0 3px rgba(139, 90, 43, 0.35),
+      0 0 6px rgba(139, 90, 43, 0.25),
+      0 0 12px rgba(139, 90, 43, 0.18),
+      0 0 20px rgba(139, 90, 43, 0.12),
+      0 0 30px rgba(139, 90, 43, 0.06);
+    filter: blur(0.5px);
+    -webkit-filter: blur(0.5px);
+    opacity: 0.85;
+  }
 }
 
 .quote-author {
@@ -447,24 +571,51 @@ onUnmounted(() => {
   opacity: 0.7;
 }
 
-/* --- 版权信息 (修复显示问题) --- */
+/* ============================================
+   版权信息
+   ============================================ */
 .global-copyright {
-  margin-top: 30px; /* 增加与书本的间距 */
-  margin-bottom: 10px; /* 确保底部有留白 */
+  margin-top: 30px;
+  margin-bottom: 10px;
   font-size: 13px;
-  color: #777; /* 加深颜色，确保可见 */
+  color: #777;
   font-family: sans-serif;
   text-align: center;
   white-space: nowrap;
   z-index: 10;
   position: relative;
-  text-shadow: 0 1px 2px rgba(255,255,255,0.8); /* 增加文字阴影，提升对比度 */
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
 }
 
-/* 桌面端微调 */
 @media (min-width: 769px) {
   .global-copyright {
     margin-top: 40px;
   }
+}
+
+/* ============================================
+   微信环境专属优化
+   ============================================ */
+.book-container.wechat-env {
+  -webkit-overflow-scrolling: touch;
+}
+
+.wechat-env .book {
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.wechat-env .page {
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.03), 3px 3px 10px rgba(0,0,0,0.08);
+}
+
+/* ============================================
+   调试辅助类（开发时可用）
+   ============================================ */
+/* 临时添加此 clas​​s 到 quote-text 查看效果对比 */
+.quote-text.debug-strong-blur {
+  filter: blur(1px) !important;
+  -webkit-filter: blur(1px) !important;
+  opacity: 0.75 !important;
+  outline: 1px dashed #ff6b6b;
 }
 </style>
