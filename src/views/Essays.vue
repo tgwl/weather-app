@@ -112,7 +112,7 @@
           <div class="entry-date">Future Plan</div>
           <h3 class="entry-title">下一步路线图 (Roadmap)</h3>
           <p class="entry-excerpt">
-            在稳定当前版本后，计划逐步实现以下功能，甚至尝试取代高德的部分体验：
+            在稳定当前版本后，计划逐步实现以下功能：
           </p>
           <div class="roadmap-list">
             <div class="roadmap-item">🔵 <span>公共聊天室：打造实时互动的地图社区</span></div>
