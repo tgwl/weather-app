@@ -39,7 +39,7 @@ const tabList = ref([
   display: flex;
   justify-content: space-around;
   align-items: center;
-  z-index: 1000;
+  z-index: 500;
   
   /* 【关键】适配 iPhone 底部安全区域 (Home Indicator) */
   padding-bottom: env(safe-area-inset-bottom);
